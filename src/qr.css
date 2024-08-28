@@ -1,0 +1,148 @@
+/* Anchor for changing scan type or camera */
+#html5-qrcode-anchor-scan-type-change {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Hover effect for the anchor */
+#html5-qrcode-anchor-scan-type-change:hover {
+  text-decoration: underline;
+}
+
+/* Select dropdown for choosing cameras */
+#html5-qrcode-select-camera {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  background-color: white;
+  font-size: 14px;
+}
+
+/* Dashboard section styling */
+#html5qr-code-full-region__dashboard_section_csr {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#html5qr-code-full-region__scan_region {
+  display: flex;
+  /* Use flexbox layout */
+  justify-content: center;
+  /* Center horizontally */
+  align-items: center;
+  /* Center vertically */
+  width: 100%;
+  /* Full width of the container */
+  min-height: 100px;
+  /* Minimum height of the container */
+  text-align: center;
+  /* Center text (for inline elements) */
+  position: relative;
+  /* Relative positioning */
+  border: 2px solid #007bff;
+  position: relative;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+
+#html5qr-code-full-region__scan_region img {
+  opacity: 0.8;
+  /* Adjust opacity as needed */
+  /* Remove width and alt style attributes from inline HTML if possible */
+}
+
+/* Button to start the camera */
+#html5-qrcode-button-camera-start {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  /* Spacing above the button */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* Adding a subtle shadow */
+  transition: background-color 0.3s ease;
+  /* Smooth transition for hover effect */
+}
+
+/* Button to start the camera */
+#html5-qrcode-button-camera-start:hover {
+  background-color: #27922b;
+}
+
+#html5-qrcode-button-camera-stop {
+  padding: 10px 20px;
+  background-color: #d9534f;
+  /* Red color for stop button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  /* Spacing above the button */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* Adding a subtle shadow */
+  transition: background-color 0.3s ease;
+  /* Smooth transition for hover effect */
+}
+
+#html5-qrcode-button-camera-stop:hover {
+  background-color: #c9302c;
+}
+
+#html5-qrcode-button-file-selection {
+  padding: 10px 20px;
+  background-color: #007bff; /* Blue color for file selection button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px; /* Spacing above the button */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Adding a subtle shadow */
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+#html5-qrcode-button-file-selection:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+#html5-qrcode-private-filescan-input {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  margin-top: 5px;
+}
+@media screen and (max-width: 600px) {
+  #html5qr-code-full-region__scan_region {
+    /* Adjust scan region styles for smaller screens */
+    padding: 10px;
+    margin-bottom: 5px;
+    border-width: 1px;
+  }
+
+  #html5-qrcode-button-camera-start,
+  #html5-qrcode-button-camera-stop,
+  #html5-qrcode-button-file-selection {
+    /* Adjust button styles for smaller screens */
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  #html5-qrcode-private-filescan-input,
+  #html5-qrcode-select-camera {
+    /* Adjust input/select styles for smaller screens */
+    padding: 8px;
+  }
+
+  /* Other responsive styles as needed */
+}
