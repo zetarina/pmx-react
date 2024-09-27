@@ -9,30 +9,34 @@ import ParcelDetailComponent from "../components/ParcelDetailComponent";
 const ParcelSearchPage: React.FC = () => {
   const [parcelId, setParcelId] = useState("");
   const [parcel, setParcel] = useState<Parcel | null>(null);
+  const [isFetching, setIsFetching] = useState(false); // Add fetching state to prevent duplicate requests
   const { parcelId: paramParcelId } = useParams<{ parcelId: string }>();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (paramParcelId) {
+    if (paramParcelId && !isFetching) {
       setParcelId(paramParcelId);
       fetchParcel(paramParcelId);
     }
   }, [paramParcelId]);
 
   const fetchParcel = async (id: string) => {
+    if (isFetching) return;
+    
+    setIsFetching(true); // Start fetching
     try {
-      const response = await unauthenticatedAxiosInstance.get(
-        `/parcelId/${id}`
-      );
+      const response = await unauthenticatedAxiosInstance.get(`/parcelId/${id}`);
       setParcel(response.data);
     } catch (error: any) {
       toast.error("Error fetching parcel");
       console.error(error);
+    } finally {
+      setIsFetching(false); // End fetching
     }
   };
 
   const handleSearch = () => {
-    if (parcelId) {
+    if (parcelId && !isFetching) {
       navigate(`/tracking/${parcelId}`);
       fetchParcel(parcelId);
     }
@@ -60,6 +64,7 @@ const ParcelSearchPage: React.FC = () => {
           <button
             onClick={handleSearch}
             className="mt-3 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200"
+            disabled={isFetching} // Disable button while fetching
           >
             Search
           </button>

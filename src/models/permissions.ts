@@ -38,7 +38,6 @@ export enum PermissionsList {
 
   ScanParcelByDriver = "scan_parcel_by_driver",
   ScanParcelByWarehouse = "scan_parcel_by_warehouse",
-  ScanParcelOutForDelivery = "scan_parcel_out_for_delivery",
   DeliverParcel = "deliver_parcel",
   CompletePayment = "complete_payment",
   RescheduleParcel = "reschedule_parcel",
@@ -46,7 +45,6 @@ export enum PermissionsList {
 
   GetInventory = "get_inventory",
   GetShipperInventory = "get_shipper_inventory",
-  GetAllParcels = "get_all_parcels",
 }
 
 export const groupedPermissions = {
@@ -98,7 +96,6 @@ export const groupedPermissions = {
     PermissionsList.CancelParcel,
     PermissionsList.GetInventory,
     PermissionsList.ScanParcelByDriver,
-    PermissionsList.ScanParcelOutForDelivery,
   ],
   office: [
     PermissionsList.ScanParcelByWarehouse,

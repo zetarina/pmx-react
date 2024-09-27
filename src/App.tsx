@@ -29,9 +29,7 @@ import RoleCreatePage from "./pages/RoleCreatePage";
 import UserListPage from "./pages/UserListPage";
 import UserCreatePage from "./pages/UserCreatePage";
 import UserUpdatePage from "./pages/UserUpdatePage";
-// import ExchangeRateCreatePage from "./pages/ExchangeRateCreatePage";
-// import ExchangeRateUpdatePage from "./pages/ExchangeRateUpdatePage";
-// import ExchangeRateListPage from "./pages/ExchangeRateListPage";
+
 import WarehouseCreatePage from "./pages/WarehouseCreatePage";
 import WarehouseUpdatePage from "./pages/WarehouseUpdatePage";
 import WarehouseListPage from "./pages/WarehouseListPage";

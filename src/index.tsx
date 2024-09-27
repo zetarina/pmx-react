@@ -30,9 +30,9 @@ const RootApp = () => {
 };
 
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <RootApp />
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 reportWebVitals();

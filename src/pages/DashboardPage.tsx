@@ -1,159 +1,167 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Page from "../components/Page";
-import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
 import { Link } from "react-router-dom";
-import { FaFileAlt, FaUserPlus, FaBoxOpen } from "react-icons/fa"; // Updated import from react-icons/fa
+import { FaFileAlt, FaUserPlus, FaBoxOpen } from "react-icons/fa";
+import { Tooltip as ReactTooltip } from "react-tooltip";
+import axiosInstance from "../api/axiosInstance";
+import LineChart from "../components/LineChart";
+import DashboardCards from "../components/DashboardCards";
 
-// Register necessary Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+// Define types for monthly data and totals
+interface MonthlyData {
+  day: number;
+  delivered: number;
+  rescheduled: number;
+  warehouse: number;
+}
+
+interface Totals {
+  onTheWay: number;
+  delivered: number;
+  inWarehouse: number;
+}
+
+// Define types for the chart data
+interface ChartData {
+  labels: number[];
+  datasets: {
+    label: string;
+    data: number[];
+    borderColor: string;
+    backgroundColor: string;
+    fill: boolean;
+    tension: number;
+  }[];
+}
 
 const DashboardPage: React.FC = () => {
-  // Dummy data for the line chart
-  const lineChartData = {
-    labels: Array.from({ length: 31 }, (_, i) => i + 1), // Days 1 to 31
-    datasets: [
-      {
-        label: "Delivered",
-        data: [
-          5, 10, 15, 20, 10, 5, 25, 30, 25, 20, 15, 10, 15, 20, 25, 30, 25, 20,
-          15, 10, 15, 20, 25, 30, 25, 20, 15, 10, 5, 10, 15,
-        ],
-        borderColor: "#4A90E2", // Blue
-        backgroundColor: "rgba(74, 144, 226, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: "Rescheduled",
-        data: [
-          3, 5, 7, 9, 5, 3, 10, 15, 12, 9, 7, 5, 7, 9, 11, 15, 12, 9, 7, 5, 7,
-          9, 11, 15, 12, 9, 7, 5, 3, 5, 7,
-        ],
-        borderColor: "#F5A623", // Orange
-        backgroundColor: "rgba(245, 166, 35, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: "Canceled",
-        data: [
-          2, 3, 4, 3, 2, 2, 5, 7, 6, 4, 3, 2, 4, 3, 4, 7, 6, 4, 3, 2, 4, 3, 4,
-          7, 6, 4, 3, 2, 2, 3, 4,
-        ],
-        borderColor: "#E74C3C", // Red
-        backgroundColor: "rgba(231, 76, 60, 0.2)",
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
+  const [lineChartData, setLineChartData] = useState<ChartData>({
+    labels: [],
+    datasets: [],
+  });
 
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top" as const,
-      },
-      title: {
-        display: true,
-        text: "Monthly Parcel Overview",
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
+  const [onTheWayTotal, setOnTheWayTotal] = useState(0);
+  const [deliveredTotal, setDeliveredTotal] = useState(0);
+  const [inWarehouseTotal, setInWarehouseTotal] = useState(0);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await axiosInstance.get<{
+          monthlyData: MonthlyData[];
+          totals: Totals;
+        }>("/dashboard");
+
+        const { monthlyData, totals } = response.data;
+
+        // Extract data for the line chart
+        const labels = monthlyData.map((day) => day.day);
+        const deliveredData = monthlyData.map((day) => day.delivered);
+        const rescheduledData = monthlyData.map((day) => day.rescheduled);
+        const warehouseData = monthlyData.map((day) => day.warehouse);
+
+        setLineChartData({
+          labels,
+          datasets: [
+            {
+              label: "Delivered",
+              data: deliveredData,
+              borderColor: "#55CC55",
+              backgroundColor: "rgba(74, 144, 226, 0.2)",
+              fill: true,
+              tension: 0.6,
+            },
+            {
+              label: "Rescheduled",
+              data: rescheduledData,
+              borderColor: "#F5A623",
+              backgroundColor: "rgba(245, 166, 35, 0.2)",
+              fill: true,
+              tension: 0.6,
+            },
+            {
+              label: "Warehouse",
+              data: warehouseData,
+              borderColor: "#4A90E2",
+              backgroundColor: "rgba(231, 76, 60, 0.2)",
+              fill: true,
+              tension: 0.6,
+            },
+          ],
+        });
+
+        // Set the totals
+        setOnTheWayTotal(totals.onTheWay);
+        setDeliveredTotal(totals.delivered);
+        setInWarehouseTotal(totals.inWarehouse);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <Page title="Dashboard">
       <Helmet>
         <title>Dashboard</title>
       </Helmet>
-      <div className="mb-8 fixed bottom-0 right-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-8 fixed bottom-0 right-0 max-w-md w-full mx-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
           <Link
             to="/dashboard/report"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 text-center flex items-center justify-center"
+            className="bg-blue-600 text-white px-4 py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 text-center flex items-center justify-center"
+            data-tooltip-id="report-tooltip"
           >
-            <FaFileAlt className="mr-2" />
+            <FaFileAlt />
           </Link>
           <Link
             to="/dashboard/user/create"
-            className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition duration-300 text-center flex items-center justify-center"
+            className="bg-green-600 text-white px-4 py-3 rounded-lg shadow-md hover:bg-green-700 transition duration-300 text-center flex items-center justify-center"
+            data-tooltip-id="user-tooltip"
           >
-            <FaUserPlus className="mr-2" />
+            <FaUserPlus />
           </Link>
           <Link
             to="/dashboard/parcel"
-            className="bg-yellow-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-yellow-700 transition duration-300 text-center flex items-center justify-center"
+            className="bg-yellow-600 text-white px-4 py-3 rounded-lg shadow-md hover:bg-yellow-700 transition duration-300 text-center flex items-center justify-center"
+            data-tooltip-id="parcel-tooltip"
           >
-            <FaBoxOpen className="mr-2" />
+            <FaBoxOpen />
           </Link>
         </div>
+        <ReactTooltip id="report-tooltip" place="top">
+          Go to Reports
+        </ReactTooltip>
+        <ReactTooltip id="user-tooltip" place="top">
+          Create a New User
+        </ReactTooltip>
+        <ReactTooltip id="parcel-tooltip" place="top">
+          Manage Parcels
+        </ReactTooltip>
       </div>
-      <div className="w-full container overflow-hidden p-8">
+
+      <div className="w-full container mx-auto overflow-hidden p-8">
         <div className="w-full p-8 bg-white rounded-lg shadow-lg border border-gray-300">
           <h1 className="text-4xl font-semibold mb-6 text-gray-900">
             Dashboard
           </h1>
 
-          {/* Second UI: Completed, Delivered, In Warehouse */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-green-100 p-6 rounded-lg shadow-lg">
-              <h2 className="text-2xl font-semibold mb-4 text-green-800">
-                On The Way
-              </h2>
-              <p className="text-gray-700 text-lg">Total: 567</p>
-            </div>
-            <div className="bg-blue-100 p-6 rounded-lg shadow-lg">
-              <h2 className="text-2xl font-semibold mb-4 text-blue-800">
-                Delivered
-              </h2>
-              <p className="text-gray-700 text-lg">Total: 678</p>
-            </div>
-            <div className="bg-yellow-100 p-6 rounded-lg shadow-lg">
-              <h2 className="text-2xl font-semibold mb-4 text-yellow-800">
-                In Warehouse
-              </h2>
-              <p className="text-gray-700 text-lg">Total: 234</p>
-            </div>
-          </div>
+          {/* Dashboard Cards */}
+          <DashboardCards
+            onTheWayTotal={onTheWayTotal}
+            deliveredTotal={deliveredTotal}
+            inWarehouseTotal={inWarehouseTotal}
+          />
 
-          {/* Graphical Representation */}
+          {/* Line Chart */}
           <div className="bg-white border p-6 rounded-lg shadow-lg mb-8">
             <h2 className="text-3xl font-semibold mb-6 text-gray-900">
               Parcel Delivery Status
             </h2>
-            <Line data={lineChartData} options={lineChartOptions} />
-          </div>
-
-          {/* Blank Section for Future UI */}
-          <div className="bg-gray-100 p-6 rounded-lg shadow-lg mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-              Future Data Placeholder
-            </h2>
-            <p className="text-gray-700">Content coming soon...</p>
+            <LineChart data={lineChartData} height={400} />
           </div>
         </div>
       </div>

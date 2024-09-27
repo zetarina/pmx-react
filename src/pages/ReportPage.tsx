@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Page from "../components/Page";
 import axiosInstance from "../api/axiosInstance";
-import { Parcel } from "../models/Parcel";
+import { Parcel, ParcelStatus, SenderType } from "../models/Parcel";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -59,7 +59,7 @@ const ReportPage: React.FC = () => {
       fetchParcels(startDate, endDate);
     }
   }, [startDate, endDate]);
-  
+
   const downloadReport = async () => {
     if (startDate && endDate) {
       try {
@@ -68,30 +68,51 @@ const ReportPage: React.FC = () => {
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
           },
-          responseType: "text", // Ensure you get the raw response text
+          responseType: "text",
         });
 
-        // Check if the response is CSV formatted data
         if (typeof response.data === "string" && response.data.includes(",")) {
-          // Parse the CSV string into an array of objects
           const parsedData = Papa.parse(response.data, {
             header: true,
             dynamicTyping: true,
           }).data;
+          console.log(parsedData);
+          // Ensure JSON fields are parsed before formatting
+          const formattedData = parsedData.map((parcel: any) => {
+            const parsedSender = parcel.sender ? JSON.parse(parcel.sender) : {};
+            const parsedReceiver = parcel.receiver
+              ? JSON.parse(parcel.receiver)
+              : {};
+            const parsedTrackingHistory = parcel.trackingHistory
+              ? JSON.parse(parcel.trackingHistory)
+              : [];
 
-          const formattedData = parsedData.map((parcel: any) => ({
-            parcelId: parcel.parcelId ?? "",
-            status: parcel.status ?? "",
-            receiverName: parcel.receiver?.name || "",
-            deliveryFees: parcel.deliveryFees,
-            paymentType: parcel.paymentType,
-          }));
+            return {
+              "Parcel ID": parcel.parcelId ?? "N/A",
+              Sender: formatSender(parsedSender),
+              Receiver: formatReceiver(parsedReceiver),
+              "Delivery Fees": parcel.deliveryFees ?? "N/A",
+              "Payment Status": parcel.paymentStatus ?? "N/A",
+              Subtotal: parcel.subTotal ?? "N/A",
+              "Total Fee": parcel.totalFee ?? "N/A",
+              Status: formatStatus(parsedTrackingHistory),
 
-          // Convert to CSV
+              "Discount Type": parcel.discountType,
+
+              "Discount Value": parcel.discountValue,
+
+              "Tax Type": parcel.taxType,
+
+              "Tax Value": parcel.taxValue,
+            };
+          });
+
           const csvData = convertToCSV(formattedData);
-
           const blob = new Blob([csvData], { type: "text/csv" });
-          saveAs(blob, `parcel-report-${startDate}-to-${endDate}.csv`);
+          saveAs(
+            blob,
+            `parcel-report-${startDate.toISOString()}-to-${endDate.toISOString()}.csv`
+          );
         } else {
           console.error("Error: Expected CSV data but got:", response.data);
         }
@@ -101,6 +122,43 @@ const ReportPage: React.FC = () => {
     }
   };
 
+  // Utility function to format the sender information
+  const formatSender = (sender: any): string => {
+    if (sender?.type === SenderType.Shipper) {
+      return sender.shipper
+        ? `${sender.shipper.username},${sender.shipper.address || "N/A"}, ${
+            sender.shipper.city?.name || "N/A"
+          }, ${sender.shipper.country?.name || "N/A"}`
+        : "Unknown Shipper";
+    } else if (sender?.type === SenderType.Guest) {
+      return sender.guest
+        ? `${sender.guest.name},${sender.guest.address || "N/A"}, ${
+            sender.guest.city?.name || "N/A"
+          }, ${sender.guest.country?.name || "N/A"}`
+        : "Unknown Guest";
+    }
+    return "Unknown Sender";
+  };
+
+  // Utility function to format the receiver information
+  const formatReceiver = (receiver: any): string => {
+    return receiver
+      ? `${receiver.name || "N/A"},${receiver.address || "N/A"}, ${
+          receiver.city?.name || "N/A"
+        }, ${receiver.country?.name || "N/A"}`
+      : "Unknown Receiver";
+  };
+
+  // Utility function to format the status based on tracking history
+  const formatStatus = (trackingHistory: any): string => {
+    const latestTracking = trackingHistory?.[trackingHistory.length - 1];
+    if (latestTracking && latestTracking.status === ParcelStatus.InWarehouse) {
+      const warehouseName =
+        latestTracking.warehouse?.name || "Unknown Warehouse";
+      return `In ${warehouseName}`;
+    }
+    return latestTracking ? latestTracking.status : "No Status";
+  };
   // Utility function to convert JSON to CSV
   const convertToCSV = (
     data: Array<{ [key: string]: string | number }>
@@ -121,12 +179,25 @@ const ReportPage: React.FC = () => {
       sortable: true,
       filter: true,
     },
-    { headerName: "Status", field: "status", sortable: true, filter: true },
     {
-      headerName: "Receiver",
-      field: "receiver.name", // Nested field path
+      headerName: "Sender",
+      field: "sender",
       sortable: true,
       filter: true,
+      cellRenderer: (params: any) => {
+        const { sender } = params.data;
+        return formatSender(sender);
+      },
+    },
+    {
+      headerName: "Receiver",
+      field: "receiver.name",
+      sortable: true,
+      filter: true,
+      cellRenderer: (params: any) => {
+        const { receiver } = params.data;
+        return formatReceiver(receiver);
+      },
     },
     {
       headerName: "Delivery Fees",
@@ -135,10 +206,32 @@ const ReportPage: React.FC = () => {
       filter: true,
     },
     {
-      headerName: "Payment Type",
-      field: "paymentType",
+      headerName: "Payment Status",
+      field: "paymentStatus",
       sortable: true,
       filter: true,
+    },
+    {
+      headerName: "Subtotal",
+      field: "subTotal",
+      sortable: true,
+      filter: true,
+    },
+    {
+      headerName: "Total Fee",
+      field: "totalFee",
+      sortable: true,
+      filter: true,
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      sortable: true,
+      filter: true,
+      cellRenderer: (params: any) => {
+        const { trackingHistory } = params.data;
+        return formatStatus(trackingHistory);
+      },
     },
   ];
 
